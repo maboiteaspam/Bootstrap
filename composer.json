@@ -16,14 +16,6 @@
     {
       "type": "vcs",
       "url": "../C/Foundation/"
-    },
-    {
-      "type": "vcs",
-      "url": "../C/Blog/"
-    },
-    {
-      "type": "vcs",
-      "url": "../C/BlogData/"
     }
   ]
 }

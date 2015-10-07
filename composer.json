@@ -1,0 +1,29 @@
+{
+  "prefer-stable": true,
+  "minimum-stability": "dev",
+  "name": "c/bootstrap",
+  "description": "bootstrap c",
+  "require": {
+    "c/foundation": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "C\\Bootstrap": "src/C"
+    }
+  },
+  "license": "WTF",
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "../C/Foundation/"
+    },
+    {
+      "type": "vcs",
+      "url": "../C/Blog/"
+    },
+    {
+      "type": "vcs",
+      "url": "../C/BlogData/"
+    }
+  ]
+}

@@ -34,7 +34,7 @@ class Common {
             }
             throw new \ErrorException($message, 0, $severity, $file, $line);
         }
-        set_error_handler("exception_error_handler");
+        set_error_handler("\\C\\Bootstrap\\exception_error_handler");
 #endregion
 
 

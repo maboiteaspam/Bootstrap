@@ -14,7 +14,7 @@
   "license": "WTF",
   "repositories": [
     {
-      "type": "vcs",
+      "type": "path",
       "url": "../Foundation/"
     }
   ]

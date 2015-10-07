@@ -15,7 +15,7 @@
   "repositories": [
     {
       "type": "vcs",
-      "url": "../C/Foundation/"
+      "url": "../Foundation/"
     }
   ]
 }

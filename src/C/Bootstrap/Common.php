@@ -12,25 +12,13 @@ use \Symfony\Component\Console\Input\InputArgument;
 use C\FS\LocalFs;
 
 class Common {
-
-    public $registerFns = [];
-    public $connectFns = [];
-
-    public $registerCliFns = [];
-    public $connectCliFns = [];
-
+    /**
+     * @var Application
+     */
     public $app;
     public $console;
 
-    public function register ($registerFn) {
-        $this->registerFns[] = $registerFn;
-    }
-
-    public function registerCli ($registerFn) {
-        $this->registerCliFns[] = $registerFn;
-    }
-
-    public function bootC ($runtime, $configTokens) {
+    public function register ($runtime, $configTokens) {
 
 #region silex
         $app = new Application();
@@ -44,7 +32,7 @@ class Common {
                 // Ce code d'erreur n'est pas inclu dans error_reporting
                 return;
             }
-            throw new ErrorException($message, 0, $severity, $file, $line);
+            throw new \ErrorException($message, 0, $severity, $file, $line);
         }
         set_error_handler("exception_error_handler");
 #endregion
@@ -102,30 +90,13 @@ class Common {
         return $app;
     }
 
-    public function boot ($runtime, $configTokens) {
-        $this->app = $this->bootC($runtime, $configTokens);
-        foreach ($this->registerFns as $fn) {
-            $fn($this->app);
-        }
-        return $this->app;
-    }
-
-    public function bootCli ($runtime, $configTokens) {
-        $this->app = $this->bootC($runtime, $configTokens);
+    public function registerCli ($name='Silex - C Edition', $version = '0.1') {
 
         $this->app->register(new C\Provider\WatcherServiceProvider());
 
-        $this->console = new Cli('Silex - C Edition', '0.1');
+        $this->console = new Cli($name, $version);
 
         $console = $this->console;
-
-        foreach ($this->registerFns as $fn) {
-            $fn($this->app);
-        }
-
-        foreach ($this->registerCliFns as $fn) {
-            $fn($this->app, $console);
-        }
 
 #region Command lines declaration
         $console
@@ -266,8 +237,9 @@ class Common {
         return $console;
     }
 
-    public function run () {
-
+    public function runCli () {
+        $this->app->boot();
+        return $this->console->run();
     }
 
 }

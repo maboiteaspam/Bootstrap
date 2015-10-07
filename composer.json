@@ -4,6 +4,7 @@
   "name": "c/bootstrap",
   "description": "bootstrap c",
   "require": {
+    "symfony/console": "^2.7",
     "c/foundation": "dev-master"
   },
   "autoload": {

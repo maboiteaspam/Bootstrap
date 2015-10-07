@@ -87,12 +87,15 @@ class Common {
         $app->register(new \Binfo\Silex\MobileDetectServiceProvider());
 #endregion
 
+        $this->app = $app;
+
         return $app;
     }
 
     public function registerCli ($name='Silex - C Edition', $version = '0.1') {
 
-        $this->app->register(new C\Provider\WatcherServiceProvider());
+        $app = $this->app;
+        $app->register(new \C\Provider\WatcherServiceProvider());
 
         $this->console = new Cli($name, $version);
 

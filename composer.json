@@ -8,7 +8,7 @@
   },
   "autoload": {
     "psr-4": {
-      "C\\Bootstrap\\": "src/C"
+      "C\\": "src/C"
     }
   },
   "license": "WTF",

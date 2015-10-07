@@ -49,7 +49,7 @@ class Common {
             $app[$key] = $value;
         }
 
-        $app->register(new \Igorw\Silex\ConfigServiceProvider(__DIR__ . "/config.php", $tokens));
+        $app->register(new \Igorw\Silex\ConfigServiceProvider("config.php", $tokens));
 #endregion
 
 

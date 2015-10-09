@@ -157,6 +157,9 @@ class Common {
                 $file = $input->getArgument('file');
                 $change = $input->getArgument('change');
 
+                $k = realpath($file);
+                if ($k!==false) $file = $k;
+
                 $watcheds = $app['watchers.watched'];
 
                 foreach ($watcheds as $watched) {
@@ -167,9 +170,9 @@ class Common {
                 foreach ($watcheds as $watched) {
                     /* @var $watched \C\Watch\WatchedInterface */
                     if ($watched->changed($change, $file)) {
-                        \C\Misc\Utils::stderr($watched->getName()." updated");
+                        \C\Misc\Utils::stdout($watched->getName()." updated with action $change");
                     } else {
-                        \C\Misc\Utils::stderr("not updated");
+                        \C\Misc\Utils::stderr($watched->getName()." not updated");
                     }
                 }
             })

@@ -106,13 +106,7 @@ class Common {
             ->register('cache:init')
             ->setDescription('Generate fs cache')
             ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
-//        $registries = [
-//            'assets.fs'=> $app['assets.fs']->registry,
-//            'layout.fs'=> $app['layout.fs']->registry,
-//            'modern.fs'=> $app['modern.fs']->registry,
-//            'intl.fs'=> $app['intl.fs']->registry,
-//            'capsule.schema'=> $app['capsule.schema']->registry,
-//        ];
+
                 $watcheds = $app['watchers.watched'];
 
                 foreach ($watcheds as $watched) {
@@ -130,21 +124,9 @@ class Common {
                     $dump = $watched->build()->saveToCache();
                     echo $watched->getName()." signed with ".$dump['signature']."\n";
                 }
-
-//
-//
-//        foreach ($registries as $name=>$registry) {
-//            /* @var $registry \C\FS\Registry */
-//            $registry->clearCached();
-//        }
-//        $app['capsule.schema']->loadSchemas();
-//        foreach ($registries as $name=>$registry) {
-//            /* @var $registry \C\FS\Registry */
-//            $dump = $registry->build()->saveToCache();
-//            echo "$name signed with ".$dump['signature']."\n";
-//        }
             })
         ;
+
         $console
             ->register('cache:update')
             ->setDefinition([

@@ -38,6 +38,18 @@ class Common {
 #endregion
 
 
+#region silex
+
+//$app->register(new MonologServiceProvider([]));
+        $app->register(new \Silex\Provider\SessionServiceProvider( ));
+//$app->register(new \Silex\Provider\SecurityServiceProvider([]));
+//$app->register(new RememberMeServiceProvider([]));
+
+        $app->register(new \Silex\Provider\UrlGeneratorServiceProvider());
+        $app->register(new \Silex\Provider\ValidatorServiceProvider());
+        $app->register(new \Silex\Provider\FormServiceProvider());
+#endregion
+
 #region config
 
         $tokens = [];
@@ -65,16 +77,6 @@ class Common {
         ]);
         $app->register(new \C\Provider\CacheProvider());
         $app->register(new \C\Provider\HttpCacheServiceProvider());
-
-//$app->register(new MonologServiceProvider([]));
-        $app->register(new \Silex\Provider\SessionServiceProvider( ));
-//$app->register(new \Silex\Provider\SecurityServiceProvider([]));
-//$app->register(new RememberMeServiceProvider([]));
-
-        $app->register(new \Silex\Provider\TranslationServiceProvider( ));
-        $app->register(new \Silex\Provider\UrlGeneratorServiceProvider());
-        $app->register(new \Silex\Provider\ValidatorServiceProvider());
-        $app->register(new \Silex\Provider\FormServiceProvider());
 
         $app->register(new \C\Provider\EsiServiceProvider());
         $app->register(new \C\Provider\IntlServiceProvider());

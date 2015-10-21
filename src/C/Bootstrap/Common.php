@@ -152,11 +152,13 @@ class Common {
                 }
 
                 foreach ($watcheds as $watched) {
-                    /* @var $watched \C\Watch\WatchedInterface */
-                    if ($watched->changed($change, $file)) {
-                        \C\Misc\Utils::stdout($watched->getName()." updated with action $change");
-                    } else {
-                        \C\Misc\Utils::stderr($watched->getName()." not updated");
+                    try{
+                        /* @var $watched \C\Watch\WatchedInterface */
+                        if ($watched->changed($change, $file)) {
+                            \C\Misc\Utils::stdout($watched->getName()." updated with action $change");
+                        }
+                    }catch(\Exception $ex) {
+                        \C\Misc\Utils::stderr($watched->getName()." failed to update !");
                     }
                 }
             })

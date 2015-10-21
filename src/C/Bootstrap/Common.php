@@ -237,30 +237,38 @@ class Common {
             ->register('db:init')
             ->setDescription('Initialize your database. Clear all, construct schema, insert fixtures.')
             ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
-                $connections = $app['capsule.connections'];
-                foreach ($connections as $connection => $options) {
-                    if ($options["driver"]==='sqlite') {
-                        if ($options["database"]!==':memory:') {
-                            $exists = LocalFs::file_exists($options['database']);
-                            if (!$exists) {
-                                $dir = dirname($options["database"]);
-                                if (!LocalFs::is_dir($dir)) LocalFs::mkdir($dir, 0700, true);
-                                LocalFs::touch($options["database"]);
+                if (isset($app['capsule.connections'])) {
+                    $connections = $app['capsule.connections'];
+                    foreach ($connections as $connection => $options) {
+                        if ($options["driver"]==='sqlite') {
+                            if ($options["database"]!==':memory:') {
+                                $exists = LocalFs::file_exists($options['database']);
+                                if (!$exists) {
+                                    $dir = dirname($options["database"]);
+                                    if (!LocalFs::is_dir($dir)) LocalFs::mkdir($dir, 0700, true);
+                                    LocalFs::touch($options["database"]);
+                                }
                             }
                         }
                     }
+                    $app['capsule.schema']->loadSchemas();
+                    $app['capsule.schema']->cleanDb();
+                    $app['capsule.schema']->initDb();
+                } else {
+                    \C\Misc\Utils::stderr("There is no database configuration available.");
                 }
-                $app['capsule.schema']->loadSchemas();
-                $app['capsule.schema']->cleanDb();
-                $app['capsule.schema']->initDb();
             })
         ;
         $console
             ->register('db:refresh')
             ->setDescription('Refresh your database.')
             ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
-                $app['capsule.schema']->loadSchemas();
-                $app['capsule.schema']->refreshDb();
+                if (isset($app['capsule.connections'])) {
+                    $app['capsule.schema']->loadSchemas();
+                    $app['capsule.schema']->refreshDb();
+                } else {
+                    \C\Misc\Utils::stderr("There is no database configuration available.");
+                }
             })
         ;
 

@@ -147,8 +147,12 @@ class Common {
                 $watcheds = $app['watchers.watched'];
 
                 foreach ($watcheds as $watched) {
-                    /* @var $watched \C\Watch\WatchedInterface */
-                    $watched->loadFromCache();
+                    try{
+                        /* @var $watched \C\Watch\WatchedInterface */
+                        $watched->loadFromCache();
+                    }catch(\Exception $ex){
+                        \C\Misc\Utils::stderr($watched->getName()." has weirdness in cache and can t be loaded !");
+                    }
                 }
 
                 foreach ($watcheds as $watched) {

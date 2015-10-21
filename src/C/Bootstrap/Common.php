@@ -81,7 +81,10 @@ class Common {
         $app->register(new \C\Provider\EsiServiceProvider());
         $app->register(new \C\Provider\IntlServiceProvider());
         $app->register(new \C\Provider\AssetsServiceProvider());
-        $app->register(new \C\Provider\CapsuleServiceProvider());
+
+        if (isset($app['capsule.connections']))
+            $app->register(new \C\Provider\CapsuleServiceProvider());
+
         $app->register(new \C\Provider\RepositoryServiceProvider());
         $app->register(new \C\Provider\LayoutServiceProvider());
         $app->register(new \C\Provider\ModernAppServiceProvider());

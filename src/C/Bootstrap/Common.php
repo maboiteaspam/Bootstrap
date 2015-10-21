@@ -138,6 +138,7 @@ class Common {
         $console = $this->console;
 
 #region Command lines declaration
+        // find more about console object at http://symfony.com/doc/current/components/console/introduction.html
         $console
             ->register('cache:init')
             ->setDescription('Generate cached items')

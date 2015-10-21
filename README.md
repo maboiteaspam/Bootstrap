@@ -18,6 +18,8 @@ You can also let `c2-bin`, `C command&control binary` tool do it for you.
 
 ## Usage
 
+The CLI interface comes with a number of pre defined tasks.
+
 ```
 Silex - C Edition version 0.1
 

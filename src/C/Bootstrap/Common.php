@@ -3,7 +3,6 @@ namespace C\Bootstrap;
 
 use \Silex\Application;
 
-
 use Symfony\Component\Console\Application as Cli;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -11,6 +10,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 use \Symfony\Component\Console\Input\InputArgument;
 use C\FS\LocalFs;
 
+/**
+ * Class Common
+ * helps to register, boot, and run a C based application.
+ *
+ * It helps you to deal with cli and web requests handling.
+ *
+ * @package C\Bootstrap
+ */
 class Common {
     /**
      * @var Application
@@ -18,6 +25,21 @@ class Common {
     public $app;
     public $console;
 
+
+    /**
+     * Register base modules and system
+     * for a C based web application.
+     *
+     * Use runtime to inject some configuration values
+     * which should override configuration file.
+     *
+     * Use configTokens to inject new configuration tokens
+     * to consume into your configuration values.
+     *
+     * @param $runtime
+     * @param $configTokens
+     * @return Application
+     */
     public function register ($runtime, $configTokens) {
 
 #region silex
@@ -97,6 +119,15 @@ class Common {
         return $app;
     }
 
+    /**
+     * Register console actions for a C based web application.
+     *
+     * This is especially useful when used with c2-bin.
+     *
+     * @param string $name
+     * @param string $version
+     * @return Cli
+     */
     public function registerCli ($name='Silex - C Edition', $version = '0.1') {
 
         $app = $this->app;
@@ -109,7 +140,7 @@ class Common {
 #region Command lines declaration
         $console
             ->register('cache:init')
-            ->setDescription('Generate fs cache')
+            ->setDescription('Generate cached items')
             ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
 
                 $watcheds = $app['watchers.watched'];
@@ -138,7 +169,7 @@ class Common {
                 new InputArgument('change', InputArgument::REQUIRED, 'Type of change'),
                 new InputArgument('file', InputArgument::REQUIRED, 'The path changed'),
             ])
-            ->setDescription('Update fs cache')
+            ->setDescription('Update cached items given a relative file path and the related File System action')
             ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
 
                 $file = $input->getArgument('file');
@@ -172,7 +203,7 @@ class Common {
         ;
         $console
             ->register('fs-cache:dump')
-            ->setDescription('Show FS cache paths')
+            ->setDescription('Dumps all paths to watch for changes.')
             ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
                 $res = [];
 
@@ -193,7 +224,7 @@ class Common {
         ;
         $console
             ->register('http:bridge')
-            ->setDescription('Generate http bridge')
+            ->setDescription('Generate an http bridge file for your webserver.')
             ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
                 $app['assets.bridger']->generate(
                     $app['assets.bridge_file_path'],
@@ -204,7 +235,7 @@ class Common {
         ;
         $console
             ->register('db:init')
-            ->setDescription('Generate http bridge')
+            ->setDescription('Initialize your database. Clear all, construct schema, insert fixtures.')
             ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
                 $connections = $app['capsule.connections'];
                 foreach ($connections as $connection => $options) {
@@ -226,7 +257,7 @@ class Common {
         ;
         $console
             ->register('db:refresh')
-            ->setDescription('Refresh db')
+            ->setDescription('Refresh your database.')
             ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
                 $app['capsule.schema']->loadSchemas();
                 $app['capsule.schema']->refreshDb();
@@ -236,6 +267,11 @@ class Common {
         return $console;
     }
 
+    /**
+     * Call this method to run the cli handler.
+     *
+     * @return mixed
+     */
     public function runCli () {
         $this->app->boot();
         return $this->console->run();

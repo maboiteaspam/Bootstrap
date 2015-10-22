@@ -103,6 +103,7 @@ class Common {
         $app->register(new \C\Provider\EsiServiceProvider());
         $app->register(new \C\Provider\IntlServiceProvider());
         $app->register(new \C\Provider\AssetsServiceProvider());
+        $app->register(new \C\Provider\FormServiceProvider());
 
         if (isset($app['capsule.connections']))
             $app->register(new \C\Provider\CapsuleServiceProvider());

@@ -4,11 +4,13 @@ Bootstrap module for applications based on a regular C framework setup.
 
 C framework is a lightweight framework dedicated to frontend development for php applications.
 
+Find more about it here https://github.com/maboiteaspam/Foundation/blob/master/doc/1-Introduction.md.
+
 Based on top of silex and symfony.
 
 ## Install
 
-You can install it alone along your project with composer
+You can install it alone along your project with composer.
 
 ```
 php composer require maboiteaspam/Bootstrap

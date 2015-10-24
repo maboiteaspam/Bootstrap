@@ -199,6 +199,7 @@ class Common {
                         }
                     }catch(\Exception $ex) {
                         \C\Misc\Utils::stderr($watched->getName()." failed to update !");
+                        \C\Misc\Utils::stderr($ex->getPrevious()->getMessage());
                     }
                 }
             })

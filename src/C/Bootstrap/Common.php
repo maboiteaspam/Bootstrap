@@ -60,18 +60,6 @@ class Common {
 #endregion
 
 
-#region silex
-
-//$app->register(new MonologServiceProvider([]));
-        $app->register(new \Silex\Provider\SessionServiceProvider( ));
-//$app->register(new \Silex\Provider\SecurityServiceProvider([]));
-//$app->register(new RememberMeServiceProvider([]));
-
-        $app->register(new \Silex\Provider\UrlGeneratorServiceProvider());
-        $app->register(new \Silex\Provider\ValidatorServiceProvider());
-        $app->register(new \Silex\Provider\FormServiceProvider());
-#endregion
-
 #region config
 
         $tokens = [];
@@ -87,7 +75,16 @@ class Common {
 #endregion
 
 
-#region service providers
+
+#region foreign components
+//$app->register(new MonologServiceProvider([]));
+        $app->register(new \Silex\Provider\SessionServiceProvider( ));
+//$app->register(new \Silex\Provider\SecurityServiceProvider([]));
+//$app->register(new RememberMeServiceProvider([]));
+
+        $app->register(new \Silex\Provider\UrlGeneratorServiceProvider());
+        $app->register(new \Silex\Provider\ValidatorServiceProvider());
+        $app->register(new \Silex\Provider\FormServiceProvider());
 
         $app->register(new \Moust\Silex\Provider\CacheServiceProvider(), [
             'caches.default' => 'default',
@@ -97,6 +94,11 @@ class Common {
                 ],
             ], $app['caches.options']),
         ]);
+        $app->register(new \Binfo\Silex\MobileDetectServiceProvider());
+#endregion
+
+
+#region C service providers
         $app->register(new \C\Provider\CacheProvider());
         $app->register(new \C\Provider\HttpCacheServiceProvider());
 
@@ -112,7 +114,6 @@ class Common {
         $app->register(new \C\Provider\LayoutServiceProvider());
         $app->register(new \C\Provider\ModernAppServiceProvider());
         $app->register(new \C\Provider\DashboardExtensionProvider());
-        $app->register(new \Binfo\Silex\MobileDetectServiceProvider());
 #endregion
 
         $this->app = $app;

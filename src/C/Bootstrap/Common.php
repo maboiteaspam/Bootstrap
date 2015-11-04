@@ -49,14 +49,16 @@ class Common {
 
 #region error to exception
 // sometimes it s useful to register it to get a stack trace
-        function exception_error_handler($severity, $message, $file, $line) {
-            if (!(error_reporting() & $severity)) {
-                // Ce code d'erreur n'est pas inclu dans error_reporting
-                return;
+        if (!function_exists('\\C\\Bootstrap\\exception_error_handler')) {
+            function exception_error_handler($severity, $message, $file, $line) {
+                if (!(error_reporting() & $severity)) {
+                    // Ce code d'erreur n'est pas inclu dans error_reporting
+                    return;
+                }
+                throw new \ErrorException($message, 0, $severity, $file, $line);
             }
-            throw new \ErrorException($message, 0, $severity, $file, $line);
+            set_error_handler("\\C\\Bootstrap\\exception_error_handler");
         }
-        set_error_handler("\\C\\Bootstrap\\exception_error_handler");
 #endregion
 
 

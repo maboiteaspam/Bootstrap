@@ -1,14 +1,17 @@
 <?php
 namespace C\Bootstrap;
 
+use C\Misc\ArrayHelpers;
 use \Silex\Application;
 
+use Silex\ServiceProviderInterface;
 use Symfony\Component\Console\Application as Cli;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use \Symfony\Component\Console\Input\InputArgument;
-use C\FS\LocalFs;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class Common
@@ -22,9 +25,67 @@ class Common {
     /**
      * @var Application
      */
-    public $app;
-    public $console;
+    protected $app;
+    /**
+     * @var ArrayHelpers
+     */
+    protected $appServices;
+    protected $appServiceValues;
 
+    /**
+     * @var Cli
+     */
+    protected $console;
+    /**
+     * @var ArrayHelpers
+     */
+    protected $cliServices;
+
+    public function __construct(){
+#region silex
+        $this->app = new Application();
+#endregion
+    }
+
+    /**
+     * @param ServiceProviderInterface $provider
+     * @param array $values
+     */
+    public function register (ServiceProviderInterface $provider, $values = array()) {
+        $this->appServices[] = $provider;
+        $this->appServiceValues[] = $values;
+    }
+
+    /**
+     * @param $some
+     * @return array|null
+     */
+    public function disable ($some) {
+        $index = $this->appServices->indexOf($some);
+        if ($index!==false){
+            $service = $this->appServices->removeAt($index);
+            $values = array_splice($this->appServiceValues, $index, 1);
+            return [$service, $values];
+        }
+        return null;
+    }
+
+    /**
+     * @param Command $command A Command object
+     *
+     * @return Command The registered command
+     */
+    public function add (Command $command) {
+        $this->cliServices[] = $command;
+    }
+
+    /**
+     * @param $some
+     * @return mixed|null
+     */
+    public function disableCommand ($some) {
+        return $this->cliServices->remove($some);
+    }
 
     /**
      * Register base modules and system
@@ -38,260 +99,149 @@ class Common {
      *
      * @param $runtime
      * @param $configTokens
-     * @return Application
      */
-    public function register ($runtime, $configTokens) {
-
-#region silex
-        $app = new Application();
-#endregion
-
-
-#region error to exception
-// sometimes it s useful to register it to get a stack trace
-        if (!function_exists('\\C\\Bootstrap\\exception_error_handler')) {
-            function exception_error_handler($severity, $message, $file, $line) {
-                if (!(error_reporting() & $severity)) {
-                    // Ce code d'erreur n'est pas inclu dans error_reporting
-                    return;
-                }
-                throw new \ErrorException($message, 0, $severity, $file, $line);
-            }
-            set_error_handler("\\C\\Bootstrap\\exception_error_handler");
-        }
-#endregion
-
+    public function setup ($runtime, $configTokens) {
 
 #region config
-
         $tokens = [];
         foreach ($configTokens as $configToken) {
             $tokens[$configToken] = $runtime[$configToken];
         }
-
-        foreach( $runtime as $key=>$value ){
-            $app[$key] = $value;
-        }
-
-        $app->register(new \Igorw\Silex\ConfigServiceProvider("config.php", $tokens));
+        $this->register(new \Igorw\Silex\ConfigServiceProvider("config.php", $tokens), $runtime);
 #endregion
 
 
 
 #region foreign components
 //$app->register(new MonologServiceProvider([]));
-        $app->register(new \Silex\Provider\SessionServiceProvider( ));
+        $this->register(new \Silex\Provider\SessionServiceProvider( ));
 //$app->register(new \Silex\Provider\SecurityServiceProvider([]));
 //$app->register(new RememberMeServiceProvider([]));
 
-        $app->register(new \Silex\Provider\UrlGeneratorServiceProvider());
-        $app->register(new \Silex\Provider\ValidatorServiceProvider());
-        $app->register(new \Silex\Provider\FormServiceProvider());
+        $this->register(new \Silex\Provider\UrlGeneratorServiceProvider());
+        $this->register(new \Silex\Provider\ValidatorServiceProvider());
+        $this->register(new \Silex\Provider\FormServiceProvider());
 
-        $app->register(new \Moust\Silex\Provider\CacheServiceProvider(), [
-            'caches.default' => 'default',
-            'caches.options' => array_merge([
-                'default'=>[
-                    'driver' => 'array',
-                ],
-            ], $app['caches.options']),
-        ]);
-        $app->register(new \Binfo\Silex\MobileDetectServiceProvider());
+        $this->register(new \Moust\Silex\Provider\CacheServiceProvider(), function($app){
+            return [
+                'caches.default' => 'default',
+                'caches.options' => array_merge([
+                    'default'=>[
+                        'driver' => 'array',
+                    ],
+                ], $app['caches.options']),
+            ];
+        });
+        $this->register(new \Binfo\Silex\MobileDetectServiceProvider());
 #endregion
 
 
 #region C service providers
-        $app->register(new \C\Provider\CacheProvider());
-        $app->register(new \C\Provider\HttpCacheServiceProvider());
+        $this->register(new \C\Provider\CacheProvider());
+        $this->register(new \C\Provider\HttpCacheServiceProvider());
 
-        $app->register(new \C\Provider\EsiServiceProvider());
-        $app->register(new \C\Provider\IntlServiceProvider());
-        $app->register(new \C\Provider\AssetsServiceProvider());
-        $app->register(new \C\Provider\FormServiceProvider());
+        $this->register(new \C\Provider\EsiServiceProvider());
+        $this->register(new \C\Provider\IntlServiceProvider());
+        $this->register(new \C\Provider\AssetsServiceProvider());
+        $this->register(new \C\Provider\FormServiceProvider());
 
-        if (isset($app['capsule.connections']))
-            $app->register(new \C\Provider\CapsuleServiceProvider());
+//        if (isset($app['capsule.connections']))
+//            $this->register(new \C\Provider\CapsuleServiceProvider());
 
-        $app->register(new \C\Provider\RepositoryServiceProvider());
-        $app->register(new \C\Provider\LayoutServiceProvider());
-        $app->register(new \C\Provider\ModernAppServiceProvider());
-        $app->register(new \C\Provider\DashboardExtensionProvider());
+        $this->register(new \C\Provider\RepositoryServiceProvider());
+        $this->register(new \C\Provider\LayoutServiceProvider());
+        $this->register(new \C\Provider\ModernAppServiceProvider());
+        $this->register(new \C\Provider\DashboardExtensionProvider());
 #endregion
-
-        $this->app = $app;
-
-        return $app;
     }
 
     /**
-     * Register console actions for a C based web application.
-     *
-     * This is especially useful when used with c2-bin.
-     *
      * @param string $name
      * @param string $version
-     * @return Cli
      */
-    public function registerCli ($name='Silex - C Edition', $version = '0.1') {
+    public function setupCli ($name='Silex - C Edition', $version = '0.1') {
 
         $app = $this->app;
         $app->register(new \C\Provider\WatcherServiceProvider());
 
         $this->console = new Cli($name, $version);
 
-        $console = $this->console;
-
 #region Command lines declaration
-        // find more about console object at http://symfony.com/doc/current/components/console/introduction.html
-        $console
-            ->register('cache:init')
-            ->setDescription('Generate cached items')
-            ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
+        $command = new \C\Cli\CacheInit();
+        $command->setWebApp($this->app);
+        $this->add($command);
 
-                $watcheds = $app['watchers.watched'];
+        $command = new \C\Cli\CacheUpdate();
+        $command->setWebApp($this->app);
+        $this->add($command);
 
-                foreach ($watcheds as $watched) {
-                    /* @var $watched \C\Watch\WatchedInterface */
-                    $watched->clearCache();
-                }
+        $command = new \C\Cli\FsCacheDump();
+        $command->setWebApp($this->app);
+        $this->add($command);
 
-                foreach ($watcheds as $watched) {
-                    /* @var $watched \C\Watch\WatchedInterface */
-                    $watched->resolveRuntime();
-                }
+        $command = new \C\Cli\DbInit();
+        $command->setWebApp($this->app);
+        $this->add($command);
 
-                foreach ($watcheds as $watched) {
-                    /* @var $watched \C\Watch\WatchedInterface */
-                    $dump = $watched->build()->saveToCache();
-                    echo $watched->getName()." signed with ".$dump['signature']."\n";
-                }
-            })
-        ;
+        $command = new \C\Cli\DbRefresh();
+        $command->setWebApp($this->app);
+        $this->add($command);
 
-        $console
-            ->register('cache:update')
-            ->setDefinition([
-                new InputArgument('change', InputArgument::REQUIRED, 'Type of change'),
-                new InputArgument('file', InputArgument::REQUIRED, 'The path changed'),
-            ])
-            ->setDescription('Update cached items given a relative file path and the related File System action')
-            ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
+        $command = new \C\Cli\HttpBridge();
+        $command->setWebApp($this->app);
+        $this->add($command);
+#endregion
 
-                $file = $input->getArgument('file');
-                $change = $input->getArgument('change');
+    }
 
-                $k = realpath($file);
-                if ($k!==false) $file = $k;
 
-                $watcheds = $app['watchers.watched'];
+    /**
+     * @return Application
+     */
+    public function boot () {
 
-                foreach ($watcheds as $watched) {
-                    try{
-                        /* @var $watched \C\Watch\WatchedInterface */
-                        $watched->loadFromCache();
-                    }catch(\Exception $ex){
-                        \C\Misc\Utils::stderr($watched->getName()." has weirdness in cache and can t be loaded !");
-                    }
-                }
+        $app = $this->app;
 
-                foreach ($watcheds as $watched) {
-                    try{
-                        /* @var $watched \C\Watch\WatchedInterface */
-                        if ($watched->changed($change, $file)) {
-                            \C\Misc\Utils::stdout($watched->getName()." updated with action $change");
-                        }
-                    }catch(\Exception $ex) {
-                        \C\Misc\Utils::stderr($watched->getName()." failed to update !");
-                        if ($ex->getPrevious())
-                            \C\Misc\Utils::stderr($ex->getPrevious()->getMessage());
-                        else
-                            \C\Misc\Utils::stderr($ex->getMessage());
-                    }
-                }
-            })
-        ;
-        $console
-            ->register('fs-cache:dump')
-            ->setDescription('Dumps all paths to watch for changes.')
-            ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
-                $res = [];
+        foreach ($this->appServices as $index=>$service) {
+            $values = $this->appServiceValues[$index];
+            if (is_callable($values)) $values = $values($app);
+            $app->register($service, $values);
+        }
 
-                $watcheds = $app['watchers.watched'];
-
-                foreach ($watcheds as $watched) {
-                    /* @var $watched \C\Watch\WatchedInterface */
-                    $watched->resolveRuntime();
-                }
-
-                foreach ($watcheds as $watched) {
-                    /* @var $watched \C\Watch\WatchedInterface */
-                    $dump = $watched->dump();
-                    if ($dump) $res[] = $dump;
-                }
-                echo json_encode($res);
-            })
-        ;
-        $console
-            ->register('http:bridge')
-            ->setDescription('Generate an http bridge file for your webserver.')
-            ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
-                $app['assets.bridger']->generate(
-                    $app['assets.bridge_file_path'],
-                    $app['assets.bridge_type'],
-                    $app['assets.fs']
-                );
-            })
-        ;
-        $console
-            ->register('db:init')
-            ->setDescription('Initialize your database. Clear all, construct schema, insert fixtures.')
-            ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
-                if (isset($app['capsule.connections'])) {
-                    $connections = $app['capsule.connections'];
-                    foreach ($connections as $connection => $options) {
-                        if ($options["driver"]==='sqlite') {
-                            if ($options["database"]!==':memory:') {
-                                $exists = LocalFs::file_exists($options['database']);
-                                if (!$exists) {
-                                    $dir = dirname($options["database"]);
-                                    if (!LocalFs::is_dir($dir)) LocalFs::mkdir($dir, 0700, true);
-                                    LocalFs::touch($options["database"]);
-                                }
-                            }
-                        }
-                    }
-                    $app['capsule.schema']->loadSchemas();
-                    $app['capsule.schema']->cleanDb();
-                    $app['capsule.schema']->initDb();
-                } else {
-                    \C\Misc\Utils::stderr("There is no database configuration available.");
-                }
-            })
-        ;
-        $console
-            ->register('db:refresh')
-            ->setDescription('Refresh your database.')
-            ->setCode(function (InputInterface $input, OutputInterface $output) use ($app) {
-                if (isset($app['capsule.connections'])) {
-                    $app['capsule.schema']->loadSchemas();
-                    $app['capsule.schema']->refreshDb();
-                } else {
-                    \C\Misc\Utils::stderr("There is no database configuration available.");
-                }
-            })
-        ;
-
-        return $console;
+        return $app;
     }
 
     /**
-     * Call this method to run the cli handler.
-     *
-     * @return mixed
+     * @param Request|null $request
      */
-    public function runCli () {
-        $this->app->boot();
-        return $this->console->run();
+    public function run (Request $request = null) {
+        $this->app->run($request);
     }
 
+    /**
+     * @param InputInterface|null $input
+     * @param OutputInterface|null $output
+     * @return int|mixed
+     */
+    public function runCli (InputInterface $input = null, OutputInterface $output = null) {
+        $this->app->boot();
+        foreach ($this->cliServices as $service) {
+            $this->console->add($service);
+        }
+        return $this->console->run($input, $output);
+    }
 }
+
+#region error to exception
+// sometimes it s useful to register it to get a stack trace
+if (!function_exists('\\C\\Bootstrap\\exception_error_handler')) {
+    function exception_error_handler($severity, $message, $file, $line) {
+        if (!(error_reporting() & $severity)) {
+            // Ce code d'erreur n'est pas inclu dans error_reporting
+            return;
+        }
+        throw new \ErrorException($message, 0, $severity, $file, $line);
+    }
+    set_error_handler("\\C\\Bootstrap\\exception_error_handler");
+}
+#endregion

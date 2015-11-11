@@ -145,8 +145,7 @@ class Common {
         $this->register(new \C\Provider\AssetsServiceProvider());
         $this->register(new \C\Provider\FormServiceProvider());
 
-//        if (isset($app['capsule.connections']))
-//            $this->register(new \C\Provider\CapsuleServiceProvider());
+        $this->register(new \C\Provider\SchemaServiceProvider());
 
         $this->register(new \C\Provider\RepositoryServiceProvider());
         $this->register(new \C\Provider\LayoutServiceProvider());
